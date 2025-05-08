@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Playlist</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    #welcomeScreen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to right, #000000, #2d004a);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      animation: fadeOut 1s ease-in-out 3s forwards;
+    }
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+    .loading {
+      margin-top: 20px;
+      display: flex;
+      gap: 8px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      background-color: white;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #11001c, #3a0055);
+      color: #fff;
+      padding-bottom: 150px;
+    }
+
+    body.light-mode {
+      background: linear-gradient(to right, #ffffff, #dddddd);
+      color: #000;
+    }
+
+    h2 {
+      text-align: center;
+      margin: 40px 0 20px;
+      font-size: 24px;
+    }
+
+    .playlist {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 20px;
+    }
+
+    .song {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      align-items: center;
+      background: #2b003d;
+      padding: 12px 16px;
+      margin: 10px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,255,255,0.15);
+      transition: transform 0.2s;
+    }
+
+    body.light-mode .song {
+      background: #eeeeee;
+      color: #000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .song:hover {
+      transform: scale(1.02);
+    }
+
+    .song img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      margin-right: 15px;
+    }
+
+    .song span {
+      font-size: 16px;
+      animation: slideText 6s linear infinite alternate;
+    }
+
+    @keyframes slideText {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(10px); }
+    }
+
+    .player {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      right: 0;
+      background: #1b0029;
+      padding: 20px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+      transition: bottom 0.4s ease;
+      z-index: 999;
+    }
+
+    body.light-mode .player {
+      background: #dcdcdc;
+      color: #000;
+    }
+
+    .player.show {
+      bottom: 0;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .controls span.title {
+      font-size: 18px;
+      font-weight: bold;
+      flex: 1;
+    }
+
+    .btn {
+      background: #7400ff;
+      border: none;
+      padding: 10px;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    body.light-mode .btn {
+      background: #7400ff;
+      color: #fff;
+    }
+
+    .btn .material-icons {
+      font-size: 28px;
+    }
+
+    .volume-slider {
+      width: 100px;
+    }
+
+    audio {
+      display: none;
+    }
+
+    .progress-container {
+      background: #3d3d3d;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    body.light-mode .progress-container {
+      background: #aaa;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #9b00ff;
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    body.light-mode .progress-bar {
+      background: #7400ff;
+    }
+
+    .volume-note {
+      text-align: center;
+      color: #ccc;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    body.light-mode .volume-note {
+      color: #333;
+    }
+
+    /* Tombol toggle tema */
+    #themeToggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    body.light-mode #themeToggle {
+      background: #11001c;
+      color: #fff;
+    }
+
+    /* Animasi logo */
+    @keyframes vibrate {
+      0% { transform: translate(0); }
+      25% { transform: translate(-1px, 1px); }
+      50% { transform: translate(1px, -1px); }
+      75% { transform: translate(-1px, -1px); }
+      100% { transform: translate(1px, 1px); }
+    }
+
+    .logo-elsamusik {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 100px;
+      z-index: 1000;
+      animation: vibrate 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Layar Selamat Datang -->
+  <div id="welcomeScreen">
+    <h1>Selamat Datang di Elsa Musik</h1>
+    <div class="loading">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+
+  <button id="themeToggle" onclick="toggleTheme()">Light</button>
+
+
+
+  <h2>Playlist</h2>
+  <div class="playlist">
+    <div class="song" onclick="playMusic(0)">
+      <img src="dj.png" alt="DJ enakeun" />
+      <span>DJ enakeun nge drop abis kane</span>
+    
+    </div>
+    <div class="song" onclick="playMusic(1)">
+      <img src="dj.png" alt="DJ Nyong" />
+      <span>DJ Nyong X stecu stecu jungle dutch</span>
+    
+        
+    
+            </div>
+<div class="song" onclick="playMusic(3)">
+  <img src="dj.png" alt="Minang TikTok" />
+  <span>PLAYLIST LAGU MINANG TIMUR TIKTOK YANG LAGI TRENDING TERBARU TERVIRAL 2025 !!!</span>
+</div>
+  
+
+  <div class="player" id="playerScreen">
+    <div class="controls">
+      <span class="title" id="currentTitle">Memutar Lagu</span>
+      <button class="btn" onclick="prevSong()">
+        <span class="material-icons">skip_previous</span>
+      </button>
+      <button class="btn" onclick="togglePlay()" id="playPauseBtn">
+        <span class="material-icons" id="playPauseIcon">pause</span>
+      </button>
+      <button class="btn" onclick="nextSong()">
+        <span class="material-icons">skip_next</span>
+      </button>
+      <input type="range" class="volume-slider" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value)" />
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <p class="volume-note">Gunakan tombol volume HP Anda untuk mengatur volume utama</p>
+    <audio id="audio" ontimeupdate="updateProgress()"></audio>
+  </div>
+
+  <script>
+    const playlist = [{ src: 'DJ DROP ENAKEUN V110 SOUND JJ KANE BUAT DIMOBIL FULL BASS MENGKANE VIRAL TIKTOK TERBARU 2025 🎧.mp3', title: 'DJ enakeun nge drop abis kane' },
+      
+      
+      { src: 'DJ NYONG DARI TIMUR X STECU STECU FULL BASS JUNGLE DUTCH 2025 !!!.mp3', title: 'DJ Nyong - Timur X stecu stecu' },
+      
+      
+      { src: 'dj terbaru 2025 full bass.mp3', title: 'DJ Terbaru 2025 Full Bass' }, { src: "PLAYLIST LAGU MINANG TIMUR TIKTOK YANG LAGI TRENDING TERBARU TERVIRAL 2025 !!!.mp3", title: "Minang Timur TikTok Viral 2025" }];
+
+    const audio = document.getElementById('audio');
+    const playerScreen = document.getElementById('playerScreen');
+    const currentTitle = document.getElementById('currentTitle');
+    const progressBar = document.getElementById('progressBar');
+    const playPauseIcon = document.getElementById('playPauseIcon');
+
+    let currentIndex = 0;
+
+    function playMusic(index) {
+      currentIndex = index;
+      const song = playlist[currentIndex];
+      audio.src = song.src;
+      currentTitle.innerText = song.title;
+      playerScreen.classList.add('show');
+      audio.play();
+    }
+
+    function togglePlay() {
+      if (audio.src === "") return;
+      if (audio.paused) {
+        audio.play();
+        playPauseIcon.textContent = "pause";
+      } else {
+        audio.pause();
+        playPauseIcon.textContent = "play_arrow";
+      }
+    }
+
+    function nextSong() {
+      currentIndex = (currentIndex + 1) % playlist.length;
+      playMusic(currentIndex);
+    }
+
+    function prevSong() {
+      currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+      playMusic(currentIndex);
+    }
+
+    function updateProgress() {
+      if (!audio.duration) return;
+      const percent = (audio.currentTime / audio.duration) * 100;
+      progressBar.style.width = percent + '%';
+    }
+
+    function setVolume(value) {
+      audio.volume = value;
+    }
+
+    audio.onended = nextSong;
+    audio.onplay = () => playPauseIcon.textContent = "pause";
+    audio.onpause = () => playPauseIcon.textContent = "play_arrow";
+
+    function toggleTheme() {
+      const body = document.body;
+      const button = document.getElementById('themeToggle');
+      body.classList.toggle('light-mode');
+      button.textContent = body.classList.contains('light-mode') ? "Dark" : "Light";
+    }
+  </script>
+
+
+  <script>
+    setTimeout(() => {
+      const welcome = document.getElementById('welcomeScreen');
+      if (welcome) welcome.style.display = 'none';
+    }, 4000);
+  </script>
+
+</body>
+</html>
